@@ -1,4 +1,4 @@
-# 🇮🇩 BansosKita - Sistem Informasi Penyaluran Bantuan Sosial Desa
+# 🇮🇩 BansosKita - Sistem Informasi Penyaluran Bantuan Sosial Desa [HACKTOWN G-2]
 
 ![License](https://img.shields.io/badge/License-MIT-blue.svg) ![React](https://img.shields.io/badge/Frontend-React_Vite-cyan) ![Node](https://img.shields.io/badge/Backend-Node.js_Express-green) ![Database](https://img.shields.io/badge/Database-MySQL-orange)
 
@@ -65,6 +65,9 @@ Ikuti langkah berikut untuk menjalankan project di komputer Anda.
 ```bash
 # Masuk ke folder backend
 cd backend
+
+# sesuaikan file env
+cp .env.example .env
 
 # Install dependencies
 npm install
