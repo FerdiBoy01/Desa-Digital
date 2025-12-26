@@ -2,8 +2,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const initialState = {
-    biodata: null,      // Untuk User Single & Admin Detail
-    biodataList: [],    // Untuk Admin List
+    biodata: null,      
+    biodataList: [], 
     isSuccess: false,
     isError: false,
     isLoading: false,
@@ -176,7 +176,7 @@ const biodataSlice = createSlice({
             state.message = action.payload;
         });
 
-        // SUBMIT SURVEY (Surveyor) --- [HANDLER BARU] ---
+        // SUBMIT SURVEY (Surveyor)
         builder.addCase(submitSurveyData.pending, (state) => { state.isLoading = true; });
         builder.addCase(submitSurveyData.fulfilled, (state, action) => {
             state.isLoading = false;

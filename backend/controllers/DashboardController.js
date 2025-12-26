@@ -4,17 +4,15 @@ import Program from "../models/ProgramModel.js";
 
 export const getDashboardStats = async (req, res) => {
     try {
-        // 1. Hitung Total Warga (Role = user)
+
         const totalWarga = await Users.count({
             where: { role: 'user' }
         });
 
-        // 2. Hitung Program Bantuan Aktif
         const programAktif = await Program.count({
             where: { isOpen: true }
         });
 
-        // 3. Statistik Pengajuan (Biodata)
         const totalPengajuan = await Biodata.count();
         
         const statusMenunggu = await Biodata.count({
@@ -29,7 +27,6 @@ export const getDashboardStats = async (req, res) => {
             where: { status_pengajuan: 'Ditolak' }
         });
 
-        // 4. Hitung yang Butuh Survey (Menunggu & Belum Survey)
         const perluSurvey = await Biodata.count({
             where: { 
                 status_pengajuan: 'Menunggu',

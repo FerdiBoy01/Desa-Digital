@@ -15,7 +15,7 @@ const Login = () => {
 
   useEffect(() => {
     if (user || isSuccess) {
-      // --- LOGIKA REDIRECT ---
+      // LOGIKA REDIRECT
       if (user && user.role === "surveyor") {
         navigate("/surveyor/dashboard"); 
       } else if (user && user.role === "admin") {
@@ -27,12 +27,10 @@ const Login = () => {
     dispatch(reset());
   }, [user, isSuccess, navigate, dispatch]);
 
-  // --- BAGIAN INI YANG HILANG SEBELUMNYA ---
   const Auth = (e) => {
     e.preventDefault();
     dispatch(LoginUser({ email, password }));
   };
-  // ------------------------------------------
 
   return (
     <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">

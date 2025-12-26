@@ -7,7 +7,7 @@ import {
     FaSearch, FaFileAlt, FaMapMarkerAlt, FaEye, 
     FaCheckCircle, FaTimesCircle, FaMapMarkedAlt, 
     FaChevronLeft, FaChevronRight, FaFilter, 
-    FaExclamationTriangle // <--- 1. JANGAN LUPA IMPORT INI
+    FaExclamationTriangle
 } from "react-icons/fa";
 
 const SurveyRepository = () => {
@@ -66,8 +66,6 @@ const SurveyRepository = () => {
 
   // --- LOGIKA BADGE STATUS (DIPERBARUI) ---
   const getStatusBadge = (data) => {
-    // 2. CEK PRIORITAS UTAMA: APAKAH ADA LAPORAN WARGA?
-    // Jika backend mengirim data comments dan jumlahnya > 0, tampilkan badge MERAH BERKEDIP
     if (data.comments && data.comments.length > 0) {
         return (
             <div className="flex flex-col items-start gap-1">

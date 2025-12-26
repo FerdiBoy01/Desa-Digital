@@ -15,13 +15,11 @@ const EditUser = () => {
   const [confPassword, setConfPassword] = useState("");
   const [role, setRole] = useState("");
   
-  // NEW: Local state for loading control
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  // We only grab message and isError from Redux now
   const { isError, message } = useSelector((state) => state.users);
 
   useEffect(() => {
@@ -41,10 +39,9 @@ const EditUser = () => {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true); // START LOADING
+    setIsSubmitting(true);
     
     try {
-        // Dispatch the action
         const action = await dispatch(updateUser({ 
             uuid: id, 
             name, 
@@ -54,16 +51,14 @@ const EditUser = () => {
             role 
         }));
         
-        // Check if the action was fulfilled (successful)
         if (updateUser.fulfilled.match(action)) {
             navigate("/users");
         } else {
-            // If rejected (failed), stop loading so user can try again
             setIsSubmitting(false);
         }
     } catch (error) {
         console.error("Update failed:", error);
-        setIsSubmitting(false); // Stop loading on unexpected error
+        setIsSubmitting(false);
     }
   };
 

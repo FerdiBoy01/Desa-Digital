@@ -4,10 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { getMe } from "../features/authSlice";
 
 // IMPORT SEMUA DASHBOARD
-import AdminDashboard from "./admin/Dashboard";     // Pastikan path ini benar
-import UserDashboard from "./user/UserDashboard";   // Pastikan path ini benar
-import SueveyorDashboard from "./surveyor/SurveyorDashboard";   // Pastikan path ini benar
-// import SurveyorDashboard from "./surveyor/Dashboard"; // Jika ada dashboard surveyor
+import AdminDashboard from "./admin/Dashboard";
+import UserDashboard from "./user/UserDashboard";
+import SueveyorDashboard from "./surveyor/SurveyorDashboard"; 
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -24,7 +23,7 @@ const Dashboard = () => {
     }
   }, [isError, navigate]);
 
-  // TAMPILAN LOADING (Biar gak kedip ke admin dulu)
+  // TAMPILAN LOADING
   if (isLoading || !user) {
     return (
         <div className="flex justify-center items-center h-screen bg-slate-50">
@@ -35,19 +34,15 @@ const Dashboard = () => {
 
   // --- LOGIKA PEMBAGIAN ROLE ---
 
-  // 1. Jika Admin -> Tampilkan Dashboard Admin
   if (user.role === "admin") {
     return <AdminDashboard />;
   } 
-  
-  // 2. Jika User -> Tampilkan Dashboard User
+
   if (user.role === "user") {
     return <UserDashboard />;
   }
 
-  // 3. Jika Surveyor (Opsional, jika belum ada file surveyor, arahkan kemana?)
   if (user.role === "surveyor") {
-     // return <SurveyorDashboard />; 
      return <SueveyorDashboard />
   }
 

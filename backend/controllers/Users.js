@@ -57,11 +57,9 @@ export const updateUser = async(req, res) => {
         
         let hashPassword;
         
-        // LOGIKA FIX: Cek password kosong/null/undefined
         if(!password || password === "") {
-            hashPassword = user.password; // Pakai password lama
+            hashPassword = user.password;
         } else {
-            // Jika user ketik password baru
             if(password !== confPassword) return res.status(400).json({msg: "Password tidak cocok"});
             const salt = await bcrypt.genSalt();
             hashPassword = await bcrypt.hash(password, salt);
@@ -78,7 +76,7 @@ export const updateUser = async(req, res) => {
 
         res.status(200).json({msg: "User Updated"});
     } catch (error) {
-        console.log(error); // <--- Cek terminal jika error
+        console.log(error);
         res.status(500).json({msg: error.message});
     }
 }

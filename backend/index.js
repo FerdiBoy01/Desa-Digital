@@ -9,21 +9,19 @@ import BiodataRoute from "./routes/BiodataRoute.js";
 import FileUpload from "express-fileupload";
 import ProgramRoute from "./routes/ProgramRoute.js";
 import DashboardRoute from "./routes/DashboardRoute.js";
+import PublicRoute from "./routes/PublicRoute.js";
 
-//models
-import Users from "./models/UserModel.js"; // Import model untuk dipancing saat sync
+// MODELS
+import Users from "./models/UserModel.js";
 import Biodata from "./models/BiodataModel.js";
 import Program from "./models/ProgramModel.js";
-import PublicRoute from "./routes/PublicRoute.js";
 import Comments from "./models/CommentModel.js";
 dotenv.config();
 
 const app = express();
 
 
-// --- DATABASE SYNC ---
-// Jalankan ini SEKALI saja saat pertama kali run project.
-// Setelah tabel 'users' muncul di database, berikan komentar (//) pada baris di bawah ini.
+// DATABASE SYNC
 
 // (async()=>{
 //     await Biodata.sync({ alter: true }); 
@@ -35,11 +33,9 @@ const app = express();
 // })();
 
 
-// ---------------------
-
 app.use(cors({
     credentials: true,
-    origin: 'http://localhost:5173' // Sesuaikan dengan port frontend React nanti
+    origin: 'http://localhost:5173' // port front
 }));
 
 app.use(express.json());
@@ -55,7 +51,7 @@ app.use(DashboardRoute);
 app.use(PublicRoute);
 
 
-// Port dari .env
+// Port .env
 const PORT = process.env.APP_PORT || 5000;
 
 app.listen(PORT, () => {

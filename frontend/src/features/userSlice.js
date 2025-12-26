@@ -132,8 +132,7 @@ const userSlice = createSlice({
             usersAdapter.removeOne(state, action.payload);
         });
         
-        // --- HANDLER GLOBAL: PENDING (LOADING) ---
-        // Menangani loading untuk SEMUA action di atas
+        // HANDLER GLOBAL: PENDING (LOADING)
         builder.addMatcher(
             (action) => action.type.endsWith('/pending'),
             (state) => {
@@ -143,15 +142,13 @@ const userSlice = createSlice({
             }
         );
 
-        // --- HANDLER GLOBAL: REJECTED (ERROR) ---
-        // Menangani error untuk SEMUA action di atas (termasuk Update)
-        // INI YANG MENCEGAH INFINITE LOADING
+        // HANDLER GLOBAL: REJECTED (ERROR)
         builder.addMatcher(
             (action) => action.type.endsWith('/rejected'),
             (state, action) => {
-                state.isLoading = false; // Matikan loading
+                state.isLoading = false;
                 state.isError = true;
-                state.message = action.payload; // Simpan pesan error dari backend
+                state.message = action.payload;
             }
         );
     }

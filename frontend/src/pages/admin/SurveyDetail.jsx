@@ -14,13 +14,13 @@ const SurveyDetail = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
   const { biodata, isLoading, isError, message } = useSelector((state) => state.biodata);
-
-  // State untuk menyimpan hasil analisa sistem
   const [recommendation, setRecommendation] = useState(null);
 
   useEffect(() => {
     dispatch(getBiodataById(id));
   }, [dispatch, id]);
+
+
 
   // --- LOGIKA ALGORITMA REKOMENDASI ---
   useEffect(() => {
@@ -56,7 +56,7 @@ const SurveyDetail = () => {
       const note = data.catatan_surveyor ? data.catatan_surveyor.toLowerCase() : "";
       
       if (note.includes("mewah") || note.includes("bagus") || note.includes("mampu") || note.includes("kaya") || note.includes("mobil")) {
-          score -= 100; // Pengurangan drastis jika surveyor bilang mampu
+          score -= 100;
           reasons.push("⛔ ALERT: Surveyor mencatat indikasi 'Mampu/Mewah' (Tidak Sesuai Kriteria).");
       } else if (note.includes("rusak") || note.includes("kumuh") || note.includes("layak") || note.includes("prihatin")) {
           score += 40;
@@ -65,7 +65,7 @@ const SurveyDetail = () => {
 
       // 4. Analisa Laporan Warga (NEW FEATURE)
       if (data.comments && data.comments.length > 0) {
-          score -= (data.comments.length * 10); // Tiap laporan mengurangi skor 10 poin
+          score -= (data.comments.length * 10);
           reasons.push(`⛔ PERHATIAN: Ada ${data.comments.length} laporan negatif dari warga.`);
       }
 

@@ -7,8 +7,8 @@ import { FaPlus, FaTrash, FaEdit, FaSearch, FaUserShield, FaUserTie, FaUser } fr
 
 const UserList = () => {
   const dispatch = useDispatch();
-  const users = useSelector(userSelectors.selectAll); // Asumsi pakai entityAdapter
-  const { isLoading } = useSelector((state) => state.users); // Sesuaikan state name
+  const users = useSelector(userSelectors.selectAll);
+  const { isLoading } = useSelector((state) => state.users);
 
   const [searchTerm, setSearchTerm] = useState("");
 

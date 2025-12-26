@@ -18,7 +18,7 @@ const Users = () => {
 
   // --- STATE PAGINATION & SEARCH ---
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10); // Ubah angka ini untuk jumlah baris per halaman
+  const [itemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -250,7 +250,7 @@ const RoleBadge = ({ role }) => {
     if (role === "admin") {
         classes = "bg-purple-50 text-purple-700 border-purple-200";
         Icon = FaUserShield;
-    } else if (role === "surveyor" || role === "survey") { // Handle both 'surveyor' and 'survey' text
+    } else if (role === "surveyor" || role === "survey") {
         classes = "bg-green-50 text-green-700 border-green-200";
         Icon = FaUserTie;
     }

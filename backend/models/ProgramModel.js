@@ -18,11 +18,11 @@ const Program = db.define('programs', {
         type: DataTypes.TEXT,
         allowNull: true
     },
-    periode: { // Contoh: "Januari 2025"
+    periode: {
         type: DataTypes.STRING,
         allowNull: true
     },
-    isOpen: { // Status: true (Buka), false (Tutup)
+    isOpen: {
         type: DataTypes.BOOLEAN,
         defaultValue: true
     }

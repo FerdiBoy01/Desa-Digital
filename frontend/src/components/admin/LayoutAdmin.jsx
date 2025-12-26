@@ -5,7 +5,7 @@ import { LogOut, reset } from "../../features/authSlice";
 import { 
     FaChartLine, FaUsers, FaClipboardList, FaCogs, 
     FaSignOutAlt, FaBars, FaTimes, FaGithub, FaUserCircle, FaBox,
-    FaFilePdf // <--- 1. JANGAN LUPA IMPORT ICON INI
+    FaFilePdf
 } from "react-icons/fa";
 
 const LayoutAdmin = ({ children }) => {
@@ -69,9 +69,8 @@ const LayoutAdmin = ({ children }) => {
             <NavItem to="/surveys" icon={<FaClipboardList />} text="Repositories (Survey)" />
             <NavItem to="/programs" icon={<FaBox />} text="Kelola Program" />
             
-            {/* --- 2. MENU BARU DITAMBAHKAN DISINI --- */}
+            {/* --- MENU BARU DITAMBAHKAN DISINI --- */}
             <NavItem to="/admin/laporan" icon={<FaFilePdf />} text="Laporan Resmi" />
-            {/* --------------------------------------- */}
 
             <NavItem to="/settings" icon={<FaCogs />} text="Settings" />
         </nav>

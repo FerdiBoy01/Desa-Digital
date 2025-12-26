@@ -4,10 +4,10 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import Dashboard from "./pages/Dashboard";
 import Layout from "./pages/Layout";
-import Welcome from "./components/Welcome"; // <-- Import Welcome
+import Welcome from "./components/Welcome";
 import Users from "./pages/admin/Users";
-import AddUser from "./pages/admin/AddUser"; // <--- Import ini
-import EditUser from "./pages/admin/EditUser"; // <--- Import ini
+import AddUser from "./pages/admin/AddUser";
+import EditUser from "./pages/admin/EditUser";
 import FormPengajuan from "./pages/user/FormPengajuan";
 import SurveyRepository from "./pages/admin/SurveyRepository";
 import SurveyDetail from "./pages/admin/SurveyDetail";
@@ -23,20 +23,18 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Route Utama sekarang ke Welcome Page */}
+        {/* Route Utama */}
         <Route path="/" element={<Welcome />} />
         
         {/* Route Login kita pindahkan ke /login */}
         <Route path="/login" element={<Login />} />
-        
         <Route path="/register" element={<Register />} />
-        
         <Route path="/dashboard" element={<Dashboard />} />
 
        {/* Route User Management */}
         <Route path="/users" element={<Users />} />
-        <Route path="/users/add" element={<AddUser />} /> {/* Route Add */}
-        <Route path="/users/edit/:id" element={<EditUser />} /> {/* Route Edit (Pakai parameter :id) */}
+        <Route path="/users/add" element={<AddUser />} />
+        <Route path="/users/edit/:id" element={<EditUser />} />
         <Route path="/surveys" element={<SurveyRepository />} />
         <Route path="/surveys/detail/:id" element={<SurveyDetail />} />
         <Route path="/programs" element={<ManageProgram />} />
@@ -45,8 +43,6 @@ function App() {
         {/* Route Form Bansos */}
         <Route path="/pengajuan/form" element={<FormPengajuan />} />
         <Route path="/cetak-bukti" element={<SuratPersetujuan />} />
-
-        {/* 2. TAMBAHKAN ROUTE INI */}
         <Route path="/transparansi" element={<Transparansi />} />
 
         <Route path="/surveyor/dashboard" element={<SurveyorDashboard />} />

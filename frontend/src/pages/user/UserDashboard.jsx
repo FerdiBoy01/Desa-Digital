@@ -129,7 +129,6 @@ const UserDashboard = () => {
                                 <p className="text-2xl font-bold text-indigo-600 my-1">{currentData.jenis_bantuan_dipilih}</p>
                                 <p className="text-sm text-slate-500 mb-4">Update Terakhir: {new Date(currentData.updatedAt).toLocaleDateString()}</p>
                                 
-                                {/* --- PERBAIKAN 1: TOMBOL MUNCUL DISINI --- */}
                                 {currentData.status_pengajuan === 'Disetujui' && (
                                     <button 
                                         onClick={() => navigate('/cetak-bukti')}
@@ -205,7 +204,6 @@ const UserDashboard = () => {
                                                         <FaCheckCircle className="text-xl"/> Selamat! Pengajuan Anda DISETUJUI.
                                                     </p>
                                                     
-                                                    {/* --- PERBAIKAN 2: TOMBOL MUNCUL JUGA DISINI --- */}
                                                     <button 
                                                         onClick={() => navigate('/cetak-bukti')}
                                                         className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-lg font-bold shadow-md flex items-center justify-center gap-2 transition transform active:scale-[0.98]"

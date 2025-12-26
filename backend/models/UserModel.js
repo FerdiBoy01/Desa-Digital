@@ -6,7 +6,7 @@ const { DataTypes } = Sequelize;
 const Users = db.define('users', {
     uuid: {
         type: DataTypes.STRING,
-        defaultValue: DataTypes.UUIDV4, // Generate ID acak otomatis (lebih aman dari angka urut)
+        defaultValue: DataTypes.UUIDV4,
         allowNull: false,
         validate: {
             notEmpty: true
@@ -17,7 +17,7 @@ const Users = db.define('users', {
         allowNull: false,
         validate: {
             notEmpty: true,
-            len: [3, 100] // Minimal 3 karakter
+            len: [3, 100]
         }
     },
     email: {
@@ -25,7 +25,7 @@ const Users = db.define('users', {
         allowNull: false,
         validate: {
             notEmpty: true,
-            isEmail: true // Validasi format email otomatis
+            isEmail: true 
         }
     },
     password: {
@@ -36,16 +36,15 @@ const Users = db.define('users', {
         }
     },
     role: {
-        // ENUM memastikan hanya 3 nilai ini yang bisa masuk ke database
         type: DataTypes.ENUM('admin', 'user', 'surveyor'), 
         allowNull: false,
-        defaultValue: 'user', // Default role jika tidak diisi
+        defaultValue: 'user',
         validate: {
             notEmpty: true
         }
     }
 }, {
-    freezeTableName: true // Agar nama tabel tetap 'users' (bukan userss)
+    freezeTableName: true
 });
 
 export default Users;

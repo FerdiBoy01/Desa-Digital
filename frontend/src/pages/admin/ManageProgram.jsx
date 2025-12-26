@@ -43,7 +43,6 @@ const ManageProgram = () => {
                 periode: period
             }, { headers: { Authorization: `Bearer ${token}` } });
             
-            // Reset Form & Refresh Data
             setName(""); setDesc(""); setPeriod("");
             alert("Program baru berhasil ditambahkan!");
             getPrograms();
@@ -56,20 +55,18 @@ const ManageProgram = () => {
     const toggleStatus = async (uuid, currentStatus, programName) => {
         try {
             const token = localStorage.getItem('token');
-            // Optimistic UI Update (Ubah tampilan dulu biar cepat)
             const newPrograms = programs.map(p => 
                 p.uuid === uuid ? { ...p, isOpen: !currentStatus } : p
             );
             setPrograms(newPrograms);
 
-            // Kirim ke Backend
             await axios.patch(`http://localhost:5000/programs/${uuid}`, {
                 isOpen: !currentStatus
             }, { headers: { Authorization: `Bearer ${token}` } });
 
         } catch (error) {
             alert("Gagal mengubah status");
-            getPrograms(); // Revert jika gagal
+            getPrograms();
         }
     };
 

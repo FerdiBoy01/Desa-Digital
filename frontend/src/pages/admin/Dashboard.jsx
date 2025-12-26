@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import LayoutAdmin from '../../components/admin/LayoutAdmin';
 import { useDispatch, useSelector } from "react-redux";
 import { getUsers, userSelectors } from "../../features/userSlice";
-import { getAllBiodata } from "../../features/biodataSlice"; // Pastikan import ini ada
+import { getAllBiodata } from "../../features/biodataSlice";
 import { Link } from 'react-router-dom';
 import { 
     FaUsers, FaHandHoldingHeart, FaClipboardCheck, FaMapMarkedAlt, 

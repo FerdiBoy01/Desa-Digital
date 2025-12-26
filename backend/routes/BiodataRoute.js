@@ -13,11 +13,11 @@ router.get('/public/recipients', getPublicApproved);
 
 // Admin Only
 router.get('/biodata/all', verifyToken, adminOrSurveyor, getAllBiodata);
-router.get('/biodata/:id', verifyToken, adminOrSurveyor, getBiodataById); // <--- Endpoint Baru
+router.get('/biodata/:id', verifyToken, adminOrSurveyor, getBiodataById);
 router.patch('/biodata/verify/:id', verifyToken, adminOnly, verifyBiodata);
 router.patch('/biodata/survey/:id', verifyToken, surveyorOnly, submitSurvey);
 
 
-router.get('/reports/approved', verifyToken, adminOnly, getReportData); // <--- Route Baru
+router.get('/reports/approved', verifyToken, adminOnly, getReportData);
 
 export default router;

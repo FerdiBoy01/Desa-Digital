@@ -10,7 +10,6 @@ import { verifyToken, adminOnly } from "../middleware/AuthUser.js";
 
 const router = express.Router();
 
-// Semua route di bawah ini diproteksi: harus login DAN harus admin
 router.get('/users', verifyToken, adminOnly, getUsers);
 router.get('/users/:id', verifyToken, adminOnly, getUserById);
 router.post('/users', verifyToken, adminOnly, createUser);

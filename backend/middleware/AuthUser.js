@@ -3,14 +3,13 @@ import Users from "../models/UserModel.js";
 
 export const verifyToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Format: "Bearer <token>"
+    const token = authHeader && authHeader.split(' ')[1];
     
     if(token == null) return res.status(401).json({msg: "Mohon login akun Anda!"});
     
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         if(err) return res.status(403).json({msg: "Token invalid"});
         
-        // Simpan data decoded ke request agar bisa dipakai controller selanjutnya
         req.email = decoded.email;
         req.role = decoded.role;
         req.userId = decoded.userId; 
@@ -19,8 +18,6 @@ export const verifyToken = (req, res, next) => {
 }
 
 export const adminOnly = async (req, res, next) => {
-    // Kita cek lagi ke database untuk keamanan ganda, atau cukup percaya token
-    // Disini kita cek token role saja untuk efisiensi
     if(req.role !== "admin") return res.status(403).json({msg: "Akses terlarang! Admin Only."});
     next();
 }

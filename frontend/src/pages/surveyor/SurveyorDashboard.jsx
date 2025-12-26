@@ -20,8 +20,7 @@ const SurveyorDashboard = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             
-            // FILTER PENTING:
-            // Hanya tampilkan yang status 'Menunggu' DAN belum disurvey
+            // FILTER
             const pendingTasks = response.data.filter(item => 
                 (item.status_pengajuan === 'Menunggu' || item.status_pengajuan === null) && 
                 !item.is_surveyed

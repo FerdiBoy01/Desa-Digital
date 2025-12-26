@@ -1,12 +1,12 @@
 import Comments from "../models/CommentModel.js";
 import Biodata from "../models/BiodataModel.js";
 
-// Ambil komentar berdasarkan ID Penerima
+// --- PUBLIC: AMBIL KOMENTAR ---
 export const getComments = async(req, res) => {
     try {
         const response = await Comments.findAll({
             where: { biodataId: req.params.biodataId },
-            order: [['createdAt', 'DESC']] // Komentar terbaru di atas
+            order: [['createdAt', 'DESC']]
         });
         res.status(200).json(response);
     } catch (error) {
@@ -14,11 +14,10 @@ export const getComments = async(req, res) => {
     }
 }
 
-// Post Komentar Baru
+// --- PUBLIC: KIRIM KOMENTAR ---
 export const createComment = async(req, res) => {
     const { nama_pelapor, isi_laporan, biodataUuid } = req.body;
     try {
-        // Cari ID internal biodata berdasarkan UUID
         const recipient = await Biodata.findOne({ where: { uuid: biodataUuid } });
         if(!recipient) return res.status(404).json({msg: "Data penerima tidak ditemukan"});
 

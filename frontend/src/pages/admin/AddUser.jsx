@@ -17,17 +17,14 @@ const AddUser = () => {
   const { isError, isLoading, message } = useSelector((state) => state.users);
 
   useEffect(() => {
-    dispatch(resetState()); // Reset error state saat halaman dibuka
+    dispatch(resetState());
   }, [dispatch]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Dispatch Action Create
-    const action = await dispatch(createUser({ name, email, password, confPassword, role }));
-    
-    // Jika sukses (tidak ada error di payload), pindah halaman
-    if (createUser.fulfilled.match(action)) {
-        navigate("/users");
+        const action = await dispatch(createUser({ name, email, password, confPassword, role }));
+            if (createUser.fulfilled.match(action)) {
+                navigate("/users");
     }
   };
 

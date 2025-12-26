@@ -84,7 +84,6 @@ const ReportPage = () => {
                 <div className="border-b-4 border-double border-black pb-4 mb-6 flex items-center justify-center relative">
                     {/* Logo Kabupaten (Placeholder) */}
                     <div className="absolute left-0 top-0">
-                        {/* Ganti src dengan logo kabupaten kamu jika ada */}
                         <div className="w-20 h-24 bg-gray-200 flex items-center justify-center text-xs text-center border border-black">
                            Logo<br/>Kabupaten
                         </div>
