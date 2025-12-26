@@ -15,8 +15,8 @@ const ReportPage = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        dispatch(getMe());
-    }, [dispatch]);
+        if (!user) dispatch(getMe());
+    }, [dispatch, user]);
 
     useEffect(() => {
         if (isError) navigate("/");

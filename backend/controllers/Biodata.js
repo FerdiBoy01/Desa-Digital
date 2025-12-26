@@ -1,6 +1,7 @@
 import Biodata from "../models/BiodataModel.js";
 import Users from "../models/UserModel.js";
 import Comments from "../models/CommentModel.js";
+import axios from "axios"; 
 import path from "path";
 import fs from "fs";
 import { Op } from "sequelize";
@@ -169,24 +170,90 @@ export const updateBiodata = async (req, res) => {
 }
 
 // --- ADMIN: VERIFIKASI DATA ---
-export const verifyBiodata = async (req, res) => {
-    try {
-        const biodata = await Biodata.findOne({ where: { uuid: req.params.id } });
-        if (!biodata) return res.status(404).json({ msg: "Data tidak ditemukan" });
+// Jangan lupa import axios di paling atas file!
 
-        if (!biodata.is_surveyed && req.body.status === "Disetujui") {
-            return res.status(400).json({ msg: "Data belum disurvey" });
+
+// ... import lainnya ...
+
+// --- ADMIN: VERIFIKASI (ACC/TOLAK) + WA NOTIF ---
+export const verifyBiodata = async(req, res) => {
+    try {
+        // 1. Ambil data biodata & user terkait untuk dapat No HP & Nama
+        const biodata = await Biodata.findOne({ 
+            where: { uuid: req.params.id },
+            include: [{ model: Users, attributes: ['name', 'email'] }] // Include User biar dapet nama asli
+        });
+
+        if(!biodata) return res.status(404).json({msg: "Data tidak ditemukan"});
+
+        // Proteksi Survey
+        if(!biodata.is_surveyed && req.body.status !== "Ditolak") { 
+            if(req.body.status === "Disetujui") {
+                return res.status(400).json({msg: "Gagal! Data belum diverifikasi oleh Tim Surveyor."});
+            }
         }
 
         const { status, catatan } = req.body;
-        await Biodata.update(
-            { status_pengajuan: status, catatan_admin: catatan },
-            { where: { uuid: req.params.id } }
-        );
 
-        res.status(200).json({ msg: `Pengajuan berhasil ${status}` });
+        // 2. Update Status di Database
+        await Biodata.update({ 
+            status_pengajuan: status, 
+            catatan_admin: catatan 
+        }, { 
+            where: { uuid: req.params.id } 
+        });
+
+        // ---------------------------------------------------------
+        // 3. LOGIKA KIRIM NOTIFIKASI WHATSAPP (HANYA JIKA DISETUJUI)
+        // ---------------------------------------------------------
+        if (status === "Disetujui") {
+            const noHp = biodata.no_handphone; // Pastikan user input no HP saat daftar
+            const namaWarga = biodata.user ? biodata.user.name : "Warga";
+            
+            // Cek apakah No HP ada
+            if (noHp) {
+                try {
+                    // Token Fonnte Anda (Ganti dengan Token Asli dari Dashboard Fonnte)
+                    const token = 'YnSC9Zaa1oSDmz5bni2X'; 
+
+                    const message = `
+*KABAR GEMBIRA DARI BANSOSKITA!* 🇮🇩
+
+Halo Sdr/i *${namaWarga}*,
+
+Selamat! Pengajuan Bantuan Sosial Anda dengan data:
+📋 *Jenis Bantuan:* ${biodata.jenis_bantuan_dipilih}
+✅ *Status:* TELAH DISETUJUI
+
+Silakan login ke website BansosKita untuk mengunduh *Kartu Penerima Digital* dan membawanya ke Balai Desa untuk pencairan dana.
+
+_Pesan ini dikirim otomatis oleh sistem._
+                    `.trim();
+
+                    // Tembak API Fonnte
+                    await axios.post('https://api.fonnte.com/send', {
+                        target: noHp,
+                        message: message,
+                        countryCode: '62', // Otomatis ubah 08xx jadi 628xx
+                    }, {
+                        headers: {
+                            'Authorization': token
+                        }
+                    });
+
+                    console.log(`WA Sukses dikirim ke ${noHp}`);
+                } catch (error) {
+                    // Jangan biarkan error WA menghentikan respon ke frontend
+                    console.error("Gagal kirim WA:", error.response ? error.response.data : error.message);
+                }
+            }
+        }
+        // ---------------------------------------------------------
+
+        res.status(200).json({msg: `Pengajuan berhasil ${status} & Notifikasi dikirim`});
+
     } catch (error) {
-        res.status(500).json({ msg: error.message });
+        res.status(500).json({msg: error.message});
     }
 }
 
@@ -256,7 +323,12 @@ export const getReportData = async (req, res) => {
     try {
         const { tahun } = req.query;
         const whereClause = { status_pengajuan: 'Disetujui' };
-        if (tahun) whereClause.tahun_periode = tahun;
+        // Jika tahun diberikan, filter berdasarkan rentang tanggal (lebih portable)
+        if (tahun) {
+            const startDate = new Date(`${tahun}-01-01T00:00:00Z`);
+            const endDate = new Date(`${tahun}-12-31T23:59:59Z`);
+            whereClause.updatedAt = { [Op.between]: [startDate, endDate] };
+        }
 
         const response = await Biodata.findAll({
             where: whereClause,

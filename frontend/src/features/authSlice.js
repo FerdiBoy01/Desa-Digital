@@ -21,8 +21,17 @@ export const LoginUser = createAsyncThunk("user/LoginUser", async(user, thunkAPI
         if(response.data.accessToken){
             localStorage.setItem('token', response.data.accessToken);
         }
-        
-        return response.data;
+        // Setelah menyimpan token, ambil data user dari endpoint /me
+        try {
+            const token = response.data.accessToken;
+            const meResp = await axios.get('http://localhost:5000/me', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            return meResp.data; // kembalikan object user
+        } catch (err) {
+            // Jika gagal mengambil /me, kembalikan minimal token object
+            return response.data;
+        }
     } catch (error) {
         if(error.response){
             const message = error.response.data.msg;
@@ -89,7 +98,16 @@ export const authSlice = createSlice({
     name: "auth",
     initialState,
     reducers: {
-        reset: (state) => initialState
+        // Jangan reset seluruh state (termasuk `user`) karena beberapa komponen
+        // memanggil `reset()` saat mount untuk membersihkan pesan/error.
+        // Jika `user` dihilangkan maka menu admin akan hilang sementara.
+        reset: (state) => {
+            state.isError = false;
+            state.isSuccess = false;
+            state.isLoading = false;
+            state.message = "";
+            // Biarkan `state.user` utuh
+        }
     },
     extraReducers: (builder) => {
         // --- LOGIN ---
@@ -136,6 +154,23 @@ export const authSlice = createSlice({
             state.isError = true;
             state.message = action.payload;
         })
+        
+        // --- LOGOUT ---
+        builder.addCase(LogOut.pending, (state) => {
+            state.isLoading = true;
+        });
+        builder.addCase(LogOut.fulfilled, (state) => {
+            state.isLoading = false;
+            state.isSuccess = false;
+            state.isError = false;
+            state.message = "";
+            state.user = null; // pastikan user dihapus saat logout selesai
+        });
+        builder.addCase(LogOut.rejected, (state, action) => {
+            state.isLoading = false;
+            state.isError = true;
+            state.message = action.payload || "Logout failed";
+        });
     }
 });
 
