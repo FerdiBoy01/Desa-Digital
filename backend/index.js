@@ -4,14 +4,18 @@ import dotenv from "dotenv";
 import db from "./config/Database.js";
 import UserRoute from "./routes/UserRoute.js";
 import AuthRoute from "./routes/AuthRoute.js";
-import Users from "./models/UserModel.js"; // Import model untuk dipancing saat sync
-import Biodata from "./models/BiodataModel.js";
-import Program from "./models/ProgramModel.js";
+
 import BiodataRoute from "./routes/BiodataRoute.js";
 import FileUpload from "express-fileupload";
 import ProgramRoute from "./routes/ProgramRoute.js";
 import DashboardRoute from "./routes/DashboardRoute.js";
 
+//models
+import Users from "./models/UserModel.js"; // Import model untuk dipancing saat sync
+import Biodata from "./models/BiodataModel.js";
+import Program from "./models/ProgramModel.js";
+import PublicRoute from "./routes/PublicRoute.js";
+import Comments from "./models/CommentModel.js";
 dotenv.config();
 
 const app = express();
@@ -24,6 +28,10 @@ const app = express();
 // (async()=>{
 //     await Biodata.sync({ alter: true }); 
 //     console.log("Database berhasil di-update!");
+// })();
+
+// (async()=>{
+//     await db.sync(); 
 // })();
 
 
@@ -44,6 +52,7 @@ app.use(UserRoute);
 app.use(BiodataRoute);
 app.use(ProgramRoute);
 app.use(DashboardRoute);
+app.use(PublicRoute);
 
 
 // Port dari .env

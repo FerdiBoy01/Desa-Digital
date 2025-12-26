@@ -16,6 +16,7 @@ import SurveyorDashboard from "./pages/surveyor/SurveyorDashboard";
 import InputSurvey from "./pages/surveyor/InputSurvey";
 import SuratPersetujuan from "./pages/user/SuratPersetujuan";
 import ReportPage from "./pages/admin/ReportPage";
+import Transparansi from "./pages/public/Transparansi";
 
 
 function App() {
@@ -44,6 +45,9 @@ function App() {
         {/* Route Form Bansos */}
         <Route path="/pengajuan/form" element={<FormPengajuan />} />
         <Route path="/cetak-bukti" element={<SuratPersetujuan />} />
+
+        {/* 2. TAMBAHKAN ROUTE INI */}
+        <Route path="/transparansi" element={<Transparansi />} />
 
         <Route path="/surveyor/dashboard" element={<SurveyorDashboard />} />
         <Route path="/surveyor/input/:id" element={<InputSurvey />} />

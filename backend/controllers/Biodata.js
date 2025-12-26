@@ -1,41 +1,73 @@
 import Biodata from "../models/BiodataModel.js";
 import Users from "../models/UserModel.js";
+import Comments from "../models/CommentModel.js"; // <--- PENTING: Import Model Komentar
 import path from "path";
 import fs from "fs";
+import { Op } from "sequelize";
 
+// --- USER: AMBIL DATA SENDIRI ---
 export const getMyBiodata = async(req, res) => {
     try {
-        // 1. Cari User dulu berdasarkan UUID dari token
         const user = await Users.findOne({ where: { uuid: req.userId } });
-        
         if(!user) return res.status(404).json({msg: "User tidak valid"});
 
-        // 2. Baru cari Biodata berdasarkan ID Asli (Integer), bukan UUID
         const biodata = await Biodata.findOne({
-            where: { userId: user.id }, // <--- INI PERBAIKANNYA (Pakai user.id, bukan req.userId)
+            where: { userId: user.id },
             include: [{
                 model: Users,
                 attributes: ['name', 'email']
             }]
         });
         
-        // Jika data kosong, return 404 (Ini wajar untuk user baru)
         if(!biodata) return res.status(404).json({msg: "Biodata belum diisi"});
-        
         res.status(200).json(biodata);
     } catch (error) {
         res.status(500).json({msg: error.message});
     }
 }
 
-// --- KHUSUS ADMIN: LIHAT SEMUA DATA ---
+// --- PUBLIC: LIST PENERIMA (HALAMAN DEPAN) ---
+export const getRecipients = async(req, res) => {
+    try {
+        const response = await Biodata.findAll({
+            where: {
+                status_pengajuan: 'Disetujui' // Hanya yang disetujui
+            },
+            // Ambil data penting saja
+            attributes: ['id', 'uuid', 'desa_kelurahan', 'jenis_bantuan_dipilih', 'updatedAt'], 
+            include: [
+                {
+                    model: Users,
+                    attributes: ['name'] // Nama Penerima
+                },
+                {
+                    model: Comments, // <--- PENTING: Sertakan Komentar
+                    attributes: ['nama_pelapor', 'isi_laporan', 'createdAt']
+                }
+            ],
+            order: [['updatedAt', 'DESC']]
+        });
+        res.status(200).json(response);
+    } catch (error) {
+        res.status(500).json({msg: error.message});
+    }
+}
+// --- ADMIN: LIHAT SEMUA DATA (REPOSITORY) ---
+// Perbaikan: Menambahkan include Comments agar badge merah muncul di tabel depan
 export const getAllBiodata = async(req, res) => {
     try {
         const response = await Biodata.findAll({
-            include: [{
-                model: Users,
-                attributes: ['name', 'email'] // Ambil nama user pemilik data
-            }]
+            include: [
+                {
+                    model: Users,
+                    attributes: ['name', 'email']
+                },
+                {
+                    model: Comments, // <--- UPDATE: Sertakan komentar untuk dihitung jumlahnya
+                    attributes: ['id']
+                }
+            ],
+            order: [['createdAt', 'DESC']] // Data terbaru paling atas
         });
         res.status(200).json(response);
     } catch (error) {
@@ -43,24 +75,115 @@ export const getAllBiodata = async(req, res) => {
     }
 }
 
-// --- KHUSUS ADMIN: LIHAT DETAIL SATU DATA ---
+// --- ADMIN: LIHAT DETAIL SATU DATA ---
+// Perbaikan: Menambahkan detail isi komentar untuk dibaca admin
 export const getBiodataById = async(req, res) => {
     try {
         const response = await Biodata.findOne({
-            where: { uuid: req.params.id }, // Cari berdasarkan UUID Biodata
-            include: [{
-                model: Users,
-                attributes: ['name', 'email']
-            }]
+            where: {
+                uuid: req.params.id
+            },
+            include: [
+                {
+                    model: Users,
+                    attributes: ['name', 'email']
+                },
+                {
+                    model: Comments, // <--- UPDATE: Sertakan isi komentar
+                    attributes: ['nama_pelapor', 'isi_laporan', 'createdAt']
+                }
+            ]
         });
-        if(!response) return res.status(404).json({msg: "Data tidak ditemukan"});
         res.status(200).json(response);
     } catch (error) {
         res.status(500).json({msg: error.message});
     }
 }
 
-// --- UPDATE FUNGSI: VERIFIKASI ADMIN (DIPROTEKSI) ---
+// --- USER: UPDATE/CREATE BIODATA ---
+export const updateBiodata = async(req, res) => {
+    try {
+        const user = await Users.findOne({ where: { uuid: req.userId } });
+        if(!user) return res.status(404).json({msg: "User tidak ditemukan"});
+
+        let biodata = await Biodata.findOne({ where: { userId: user.id } });
+        
+        // --- HELPER UPLOAD ---
+        const handleFileUpload = (file, oldFileName) => {
+            if(!file) return oldFileName;
+            
+            const ext = path.extname(file.name);
+            const fileName = file.md5 + Date.now() + ext; // Timestamp agar unik
+            const allowedType = ['.png','.jpg','.jpeg'];
+
+            if(!allowedType.includes(ext.toLowerCase())) throw new Error("Tipe file harus JPG/PNG");
+            if(file.size > 5000000) throw new Error("Ukuran file maksimal 5 MB");
+
+            file.mv(`./public/uploads/${fileName}`, (err) => {
+                if(err) throw new Error(err.message);
+            });
+            
+            if(oldFileName && fs.existsSync(`./public/uploads/${oldFileName}`)) {
+                try { fs.unlinkSync(`./public/uploads/${oldFileName}`); } catch(e){}
+            }
+
+            return fileName;
+        };
+
+        // --- PROSES FILE ---
+        let ktpName = biodata?.foto_ktp || null;
+        let kkName = biodata?.foto_kk || null;
+        let rumahName = biodata?.foto_rumah || null;
+
+        if (req.files) {
+            try {
+                if(req.files.foto_ktp) ktpName = handleFileUpload(req.files.foto_ktp, ktpName);
+                if(req.files.foto_kk) kkName = handleFileUpload(req.files.foto_kk, kkName);
+                if(req.files.foto_rumah) rumahName = handleFileUpload(req.files.foto_rumah, rumahName);
+            } catch (error) {
+                return res.status(422).json({msg: error.message});
+            }
+        }
+
+        // --- DATA INPUT ---
+        const {
+            nik, no_kk, tempat_lahir, tanggal_lahir, jenis_kelamin, agama,
+            pekerjaan, penghasilan_bulanan, jumlah_tanggungan,
+            alamat_lengkap, provinsi, kabupaten, kecamatan, desa_kelurahan, kode_pos, no_handphone,
+            penerima_pkh, penerima_bpnt, jenis_bantuan_dipilih
+        } = req.body;
+
+        const dataInput = {
+            nik, no_kk, tempat_lahir, tanggal_lahir, jenis_kelamin, agama,
+            pekerjaan, penghasilan_bulanan, jumlah_tanggungan,
+            alamat_lengkap, provinsi, kabupaten, kecamatan, desa_kelurahan, kode_pos, no_handphone,
+            penerima_pkh: (penerima_pkh === 'true' || penerima_pkh === true),
+            penerima_bpnt: (penerima_bpnt === 'true' || penerima_bpnt === true),
+            foto_ktp: ktpName,
+            foto_kk: kkName,
+            foto_rumah: rumahName,
+            jenis_bantuan_dipilih,
+            // Jika update data, status kembali jadi Menunggu (Optional, tergantung kebijakan)
+            // status_pengajuan: 'Menunggu', 
+            userId: user.id
+        };
+
+        if(!biodata) {
+            dataInput.status_pengajuan = 'Menunggu'; // Set default jika baru buat
+            await Biodata.create(dataInput);
+            res.status(201).json({msg: "Data Berhasil Disimpan"});
+        } else {
+            await Biodata.update(dataInput, { where: { userId: user.id } });
+            res.status(200).json({msg: "Data Berhasil Diperbarui"});
+        }
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({msg: error.message});
+    }
+}
+
+// --- ADMIN: VERIFIKASI (ACC/TOLAK) ---
 export const verifyBiodata = async(req, res) => {
     try {
         const biodata = await Biodata.findOne({ where: { uuid: req.params.id } });
@@ -68,14 +191,11 @@ export const verifyBiodata = async(req, res) => {
 
         // PROTEKSI: Cek apakah sudah disurvey?
         if(!biodata.is_surveyed && req.body.status !== "Ditolak") { 
-            // Admin BOLEH Menolak walau belum survey (misal data user ngaco banget)
-            // Tapi TIDAK BOLEH Menyetujui sebelum survey
             if(req.body.status === "Disetujui") {
                 return res.status(400).json({msg: "Gagal! Data belum diverifikasi oleh Tim Surveyor."});
             }
         }
 
-        // ... kode update status yang lama ...
         const { status, catatan } = req.body;
         await Biodata.update({ status_pengajuan: status, catatan_admin: catatan }, { where: { uuid: req.params.id } });
         res.status(200).json({msg: `Pengajuan berhasil ${status}`});
@@ -85,19 +205,18 @@ export const verifyBiodata = async(req, res) => {
     }
 }
 
-// --- FUNGSI BARU: SURVEYOR SUBMIT DATA ---
+// --- SURVEYOR: SUBMIT LAPORAN ---
 export const submitSurvey = async(req, res) => {
     try {
         const biodata = await Biodata.findOne({ where: { uuid: req.params.id } });
         if(!biodata) return res.status(404).json({msg: "Data tidak ditemukan"});
 
-        // Handle File Upload (Logic sama seperti upload user)
         let fotoLokasiName = null;
         let fotoKondisiName = null;
 
         const handleFileUpload = (file) => {
             const ext = path.extname(file.name);
-            const fileName = file.md5 + Date.now() + ext; // Tambah timestamp biar unik
+            const fileName = file.md5 + Date.now() + ext;
             file.mv(`./public/uploads/${fileName}`);
             return fileName;
         };
@@ -109,7 +228,6 @@ export const submitSurvey = async(req, res) => {
                 fotoKondisiName = handleFileUpload(req.files.foto_survey_kondisi_rumah);
         }
 
-        // Cari nama surveyor dari token login
         const surveyor = await Users.findOne({ where: { uuid: req.userId } });
 
         await Biodata.update({
@@ -129,112 +247,18 @@ export const submitSurvey = async(req, res) => {
     }
 }
 
-export const updateBiodata = async(req, res) => {
-    try {
-        const user = await Users.findOne({ where: { uuid: req.userId } });
-        if(!user) return res.status(404).json({msg: "User tidak ditemukan"});
-
-        let biodata = await Biodata.findOne({ where: { userId: user.id } });
-        
-        // --- FUNGSI HELPER UNTUK HANDLE UPLOAD ---
-        const handleFileUpload = (file, oldFileName) => {
-            if(!file) return oldFileName; // Jika gak ada file baru, pakai yg lama
-            
-            const ext = path.extname(file.name);
-            const fileName = file.md5 + ext; // Buat nama unik
-            const allowedType = ['.png','.jpg','.jpeg'];
-
-            if(!allowedType.includes(ext.toLowerCase())) {
-                throw new Error("Invalid Image Type");
-            }
-            if(file.data.length > 5000000) { // Max 5MB
-                throw new Error("Image must be less than 5 MB");
-            }
-
-            // Pindahkan file ke folder public/uploads
-            file.mv(`./public/uploads/${fileName}`, (err) => {
-                if(err) throw new Error(err.message);
-            });
-            
-            // Hapus file lama jika ada (optional, biar hemat storage)
-            if(oldFileName && fs.existsSync(`./public/uploads/${oldFileName}`)) {
-                try { fs.unlinkSync(`./public/uploads/${oldFileName}`); } catch(e){}
-            }
-
-            return fileName;
-        };
-
-        
-        
-
-        // --- PROSES FILE ---
-        let ktpName = biodata?.foto_ktp || null;
-        let kkName = biodata?.foto_kk || null;
-        let rumahName = biodata?.foto_rumah || null;
-
-        if (req.files) {
-            try {
-                if(req.files.foto_ktp) ktpName = handleFileUpload(req.files.foto_ktp, ktpName);
-                if(req.files.foto_kk) kkName = handleFileUpload(req.files.foto_kk, kkName);
-                if(req.files.foto_rumah) rumahName = handleFileUpload(req.files.foto_rumah, rumahName);
-            } catch (error) {
-                return res.status(422).json({msg: error.message});
-            }
-        }
-
-        // --- SIAPKAN DATA UPDATE ---
-        // Ambil text data dari req.body
-        const {
-            nik, no_kk, tempat_lahir, tanggal_lahir, jenis_kelamin, agama,
-            pekerjaan, penghasilan_bulanan, jumlah_tanggungan,
-            alamat_lengkap, provinsi, kabupaten, kecamatan, desa_kelurahan, kode_pos, no_handphone,
-            penerima_pkh, penerima_bpnt, jenis_bantuan_dipilih
-        } = req.body;
-
-        const dataInput = {
-            nik, no_kk, tempat_lahir, tanggal_lahir, jenis_kelamin, agama,
-            pekerjaan, penghasilan_bulanan, jumlah_tanggungan,
-            alamat_lengkap, provinsi, kabupaten, kecamatan, desa_kelurahan, kode_pos, no_handphone,
-            penerima_pkh: penerima_pkh === 'true' || penerima_pkh === true, // Konversi string "true" jadi boolean
-            penerima_bpnt: penerima_bpnt === 'true' || penerima_bpnt === true,
-            foto_ktp: ktpName,   // <--- Simpan nama file
-            foto_kk: kkName,     // <--- Simpan nama file
-            foto_rumah: rumahName,
-            jenis_bantuan_dipilih,
-            status_pengajuan: 'Menunggu', // <--- Simpan nama file
-            userId: user.id
-        };
-
-        if(!biodata) {
-            await Biodata.create(dataInput);
-            res.status(201).json({msg: "Data & Foto berhasil disimpan"});
-        } else {
-            await Biodata.update(dataInput, { where: { userId: user.id } });
-            res.status(200).json({msg: "Data & Foto berhasil diperbarui"});
-        }
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({msg: error.message});
-    }
-}
-
-// ... fungsi lainnya ...
-
-// --- PUBLIC: LIST PENERIMA BANTUAN (TANPA LOGIN) ---
+// --- PUBLIC: 10 PENERIMA TERAKHIR ---
 export const getPublicApproved = async(req, res) => {
     try {
         const response = await Biodata.findAll({
-            where: { 
-                status_pengajuan: 'Disetujui' // Hanya yang disetujui
-            },
-            attributes: ['uuid', 'jenis_bantuan_dipilih', 'desa_kelurahan', 'catatan_admin', 'updatedAt'], // Ambil kolom penting saja
+            where: { status_pengajuan: 'Disetujui' },
+            attributes: ['uuid', 'jenis_bantuan_dipilih', 'desa_kelurahan', 'catatan_admin', 'updatedAt'],
             include: [{
                 model: Users,
-                attributes: ['name'] // Ambil nama user
+                attributes: ['name']
             }],
-            order: [['updatedAt', 'DESC']], // Urutkan dari yang terbaru
-            limit: 10 // Batasi 10 orang terakhir agar tidak berat
+            order: [['updatedAt', 'DESC']],
+            limit: 10
         });
         res.status(200).json(response);
     } catch (error) {
@@ -242,18 +266,12 @@ export const getPublicApproved = async(req, res) => {
     }
 }
 
-// --- LAPORAN RESMI (DESA KE KABUPATEN) ---
+// --- ADMIN: LAPORAN DATA (EXPORT) ---
 export const getReportData = async(req, res) => {
     try {
-        const { tahun } = req.query; // Bisa filter by tahun (optional)
-        
-        const whereClause = {
-            status_pengajuan: 'Disetujui' // HANYA YANG DISETUJUI
-        };
-
-        if(tahun) {
-            whereClause.tahun_periode = tahun;
-        }
+        const { tahun } = req.query;
+        const whereClause = { status_pengajuan: 'Disetujui' };
+        if(tahun) whereClause.tahun_periode = tahun;
 
         const response = await Biodata.findAll({
             where: whereClause,
@@ -262,8 +280,8 @@ export const getReportData = async(req, res) => {
                 attributes: ['name']
             }],
             order: [
-                ['jenis_bantuan_dipilih', 'ASC'], // Kelompokkan per jenis bantuan
-                ['desa_kelurahan', 'ASC'],        // Urutkan per desa
+                ['jenis_bantuan_dipilih', 'ASC'],
+                ['desa_kelurahan', 'ASC'],
             ]
         });
         res.status(200).json(response);

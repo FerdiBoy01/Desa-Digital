@@ -31,7 +31,7 @@ const Comments = db.define('comments', {
 });
 
 // Relasi: 1 Penerima bisa punya banyak Komentar
-Biodata.hasMany(Comments);
+Biodata.hasMany(Comments, {foreignKey: 'biodataId'});
 Comments.belongsTo(Biodata, {foreignKey: 'biodataId'});
 
 export default Comments;

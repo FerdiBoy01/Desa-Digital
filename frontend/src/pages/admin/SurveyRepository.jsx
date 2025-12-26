@@ -6,7 +6,8 @@ import { Link } from "react-router-dom";
 import { 
     FaSearch, FaFileAlt, FaMapMarkerAlt, FaEye, 
     FaCheckCircle, FaTimesCircle, FaMapMarkedAlt, 
-    FaChevronLeft, FaChevronRight, FaFilter 
+    FaChevronLeft, FaChevronRight, FaFilter, 
+    FaExclamationTriangle // <--- 1. JANGAN LUPA IMPORT INI
 } from "react-icons/fa";
 
 const SurveyRepository = () => {
@@ -15,32 +16,26 @@ const SurveyRepository = () => {
 
   // --- STATE ---
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(6); //jumalh yang di tampilkan di layar front
+  const [itemsPerPage] = useState(6); 
   const [searchTerm, setSearchTerm] = useState("");
-  
-  // STATE BARU: Untuk Filter Status
   const [filterStatus, setFilterStatus] = useState("all"); 
 
   useEffect(() => {
     dispatch(getAllBiodata());
   }, [dispatch]);
 
-  // --- LOGIKA FILTER GABUNGAN (SEARCH + STATUS) ---
+  // --- LOGIKA FILTER ---
   const filteredData = biodataList ? biodataList.filter((item) => {
-      // 1. Filter Pencarian Teks
       const lowerSearch = searchTerm.toLowerCase();
       const matchSearch = (
           item.user?.name.toLowerCase().includes(lowerSearch) ||
           item.nik.includes(lowerSearch)
       );
 
-      // 2. Filter Kategori Status
       let matchStatus = true;
       if (filterStatus === 'perlu_survey') {
-          // Status Menunggu DAN Belum Disurvey
           matchStatus = item.status_pengajuan === 'Menunggu' && !item.is_surveyed;
       } else if (filterStatus === 'siap_verifikasi') {
-          // Status Menunggu DAN Sudah Disurvey
           matchStatus = item.status_pengajuan === 'Menunggu' && item.is_surveyed;
       } else if (filterStatus === 'disetujui') {
           matchStatus = item.status_pengajuan === 'Disetujui';
@@ -48,11 +43,10 @@ const SurveyRepository = () => {
           matchStatus = item.status_pengajuan === 'Ditolak';
       }
 
-      // Gabungkan kedua filter
       return matchSearch && matchStatus;
   }) : [];
 
-  // --- LOGIKA PAGINATION (Berdasarkan Data yang sudah difilter) ---
+  // --- PAGINATION ---
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
@@ -65,14 +59,29 @@ const SurveyRepository = () => {
       setCurrentPage(1); 
   };
 
-  // Fungsi ganti tab filter (Reset halaman ke 1 saat ganti tab)
   const handleFilterChange = (status) => {
       setFilterStatus(status);
       setCurrentPage(1);
   };
 
-  // --- LOGIKA BADGE STATUS (VISUAL) ---
+  // --- LOGIKA BADGE STATUS (DIPERBARUI) ---
   const getStatusBadge = (data) => {
+    // 2. CEK PRIORITAS UTAMA: APAKAH ADA LAPORAN WARGA?
+    // Jika backend mengirim data comments dan jumlahnya > 0, tampilkan badge MERAH BERKEDIP
+    if (data.comments && data.comments.length > 0) {
+        return (
+            <div className="flex flex-col items-start gap-1">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-600 text-white border border-red-700 animate-pulse shadow-sm">
+                    <FaExclamationTriangle className="text-yellow-300" /> {data.comments.length} Laporan
+                </span>
+                <span className="text-[10px] text-slate-500 font-medium">
+                    Status: {data.status_pengajuan}
+                </span>
+            </div>
+        );
+    }
+
+    // ... Logika Status Biasa ...
     if (data.status_pengajuan === 'Disetujui') {
         return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200"><FaCheckCircle /> Disetujui</span>;
     }
@@ -96,7 +105,6 @@ const SurveyRepository = () => {
     }
   };
 
-  // Helper untuk tombol Tab biar kodenya rapi
   const TabButton = ({ label, value, icon, colorClass }) => (
       <button
           onClick={() => handleFilterChange(value)}
@@ -124,7 +132,7 @@ const SurveyRepository = () => {
 
       {isError && <div className="p-3 bg-red-100 text-red-700 rounded mb-4">{message}</div>}
 
-      {/* --- FILTER TABS (FITUR BARU) --- */}
+      {/* --- FILTER TABS --- */}
       <div className="flex flex-wrap gap-3 mb-6">
           <TabButton label="Semua Data" value="all" icon={<FaFilter />} colorClass="bg-slate-700" />
           <TabButton label="Perlu Survey" value="perlu_survey" icon={<FaMapMarkedAlt />} colorClass="bg-orange-500" />
@@ -136,7 +144,7 @@ const SurveyRepository = () => {
       {/* --- TABLE CONTAINER --- */}
       <div className="bg-white border border-gray-300 rounded-md shadow-sm overflow-hidden flex flex-col min-h-[450px]">
         
-        {/* Search Bar & Counter */}
+        {/* Search Bar */}
         <div className="bg-[#f6f8fa] p-3 border-b border-gray-300 flex items-center justify-between">
             <div className="relative w-full max-w-sm">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><FaSearch className="text-xs" /></span>
@@ -210,7 +218,7 @@ const SurveyRepository = () => {
                                     <p className="text-xs text-gray-500 pl-4">{data.kecamatan}, {data.kabupaten}</p>
                                 </td>
 
-                                {/* Kolom 4: STATUS */}
+                                {/* Kolom 4: STATUS (Dengan Indikator Laporan) */}
                                 <td className="px-4 py-3 align-top">
                                     {getStatusBadge(data)}
                                 </td>
@@ -234,18 +242,14 @@ const SurveyRepository = () => {
         {/* --- PAGINATION CONTROLS --- */}
         {!isLoading && filteredData.length > 0 && (
             <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between sm:px-6">
-                
-                {/* Info Text */}
                 <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <div>
                         <p className="text-xs text-gray-700">
                             Menampilkan <span className="font-medium">{indexOfFirstItem + 1}</span> - <span className="font-medium">{Math.min(indexOfLastItem, filteredData.length)}</span> dari <span className="font-medium">{filteredData.length}</span> data
                         </p>
                     </div>
-                    
-                    {/* Tombol Navigasi */}
                     <div>
-                        <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                             <button
                                 onClick={() => paginate(currentPage - 1)}
                                 disabled={currentPage === 1}
@@ -253,8 +257,6 @@ const SurveyRepository = () => {
                             >
                                 <FaChevronLeft className="h-3 w-3" />
                             </button>
-
-                            {/* Page Numbers Logic (Simplified) */}
                             {[...Array(totalPages)].map((_, i) => (
                                 <button
                                     key={i + 1}
@@ -268,7 +270,6 @@ const SurveyRepository = () => {
                                     {i + 1}
                                 </button>
                             ))}
-
                             <button
                                 onClick={() => paginate(currentPage + 1)}
                                 disabled={currentPage === totalPages}
@@ -279,14 +280,12 @@ const SurveyRepository = () => {
                         </nav>
                     </div>
                 </div>
-
                  {/* Mobile Pagination */}
                  <div className="flex items-center justify-between sm:hidden w-full">
                      <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1 border rounded text-xs">Prev</button>
                      <span className="text-xs">Hal {currentPage} / {totalPages}</span>
                      <button onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages} className="px-3 py-1 border rounded text-xs">Next</button>
                 </div>
-
             </div>
         )}
       </div>
