@@ -6,6 +6,7 @@ import { getMe } from "../features/authSlice";
 // IMPORT SEMUA DASHBOARD
 import AdminDashboard from "./admin/Dashboard";     // Pastikan path ini benar
 import UserDashboard from "./user/UserDashboard";   // Pastikan path ini benar
+import SueveyorDashboard from "./surveyor/SurveyorDashboard";   // Pastikan path ini benar
 // import SurveyorDashboard from "./surveyor/Dashboard"; // Jika ada dashboard surveyor
 
 const Dashboard = () => {
@@ -47,7 +48,7 @@ const Dashboard = () => {
   // 3. Jika Surveyor (Opsional, jika belum ada file surveyor, arahkan kemana?)
   if (user.role === "surveyor") {
      // return <SurveyorDashboard />; 
-     return <div className="text-center mt-20">Halaman Surveyor Belum Dibuat</div>;
+     return <SueveyorDashboard />
   }
 
   // Fallback jika role aneh

@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { LogOut, reset } from "../features/authSlice";
 import { 
     FaHome, FaUsers, FaClipboardList, FaSignOutAlt, 
-    FaHandHoldingHeart, FaBoxOpen 
+    FaHandHoldingHeart, FaBoxOpen, FaFilePdf
 } from "react-icons/fa";
 
 const Sidebar = () => {
@@ -23,6 +23,7 @@ const Sidebar = () => {
       { name: "Data Pengguna", path: "/users", icon: <FaUsers /> },
       { name: "Data Pengajuan", path: "/surveys", icon: <FaClipboardList /> },
       { name: "Program Bantuan", path: "/programs", icon: <FaBoxOpen /> }, // Asumsi ada page ini
+      { name: "Laporan Resmi", path: "/admin/laporan", icon: <FaFilePdf /> },
   ];
 
   return (

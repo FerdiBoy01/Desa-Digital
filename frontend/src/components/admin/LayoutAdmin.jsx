@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, Link, useLocation } from "react-router-dom"; // <--- PENTING: Link diimport
+import { useNavigate, Link, useLocation } from "react-router-dom"; 
 import { LogOut, reset } from "../../features/authSlice";
 import { 
     FaChartLine, FaUsers, FaClipboardList, FaCogs, 
-    FaSignOutAlt, FaBars, FaTimes, FaGithub, FaUserCircle, FaBox
+    FaSignOutAlt, FaBars, FaTimes, FaGithub, FaUserCircle, FaBox,
+    FaFilePdf // <--- 1. JANGAN LUPA IMPORT ICON INI
 } from "react-icons/fa";
 
 const LayoutAdmin = ({ children }) => {
@@ -22,7 +23,7 @@ const LayoutAdmin = ({ children }) => {
   return (
     <div className="flex h-screen bg-[#f6f8fa] font-sans text-slate-900">
       
-      {/* --- MOBILE OVERLAY (Background Gelap saat menu buka di HP) --- */}
+      {/* --- MOBILE OVERLAY --- */}
       {isSidebarOpen && (
         <div 
             className="fixed inset-0 bg-black/50 z-20 md:hidden"
@@ -39,12 +40,10 @@ const LayoutAdmin = ({ children }) => {
         {/* Header Sidebar (Logo) */}
         <div className="h-16 flex items-center px-6 border-b border-gray-700">
             <FaGithub className="text-3xl mr-3" />
-            {/* Menggunakan Link agar klik logo tidak reload halaman */}
             <Link to="/dashboard" className="font-bold text-lg tracking-tight hover:text-gray-300 transition">
                 Admin<span className="font-normal text-gray-400">Panel</span>
             </Link>
             
-            {/* Tombol Close di Mobile */}
             <button onClick={() => setIsSidebarOpen(false)} className="ml-auto md:hidden text-gray-400">
                 <FaTimes />
             </button>
@@ -54,7 +53,6 @@ const LayoutAdmin = ({ children }) => {
         <div className="px-6 py-4 border-b border-gray-700">
             <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center font-bold text-xs overflow-hidden">
-                    {/* Fallback & Optional Chaining agar tidak crash */}
                     {user?.name ? user.name.charAt(0).toUpperCase() : <FaUserCircle />}
                 </div>
                 <div className="overflow-hidden">
@@ -70,6 +68,11 @@ const LayoutAdmin = ({ children }) => {
             <NavItem to="/users" icon={<FaUsers />} text="Users" />
             <NavItem to="/surveys" icon={<FaClipboardList />} text="Repositories (Survey)" />
             <NavItem to="/programs" icon={<FaBox />} text="Kelola Program" />
+            
+            {/* --- 2. MENU BARU DITAMBAHKAN DISINI --- */}
+            <NavItem to="/admin/laporan" icon={<FaFilePdf />} text="Laporan Resmi" />
+            {/* --------------------------------------- */}
+
             <NavItem to="/settings" icon={<FaCogs />} text="Settings" />
         </nav>
 
@@ -87,7 +90,7 @@ const LayoutAdmin = ({ children }) => {
       {/* --- KONTEN AREA --- */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         
-        {/* HEADER MOBILE (Hanya muncul di HP) */}
+        {/* HEADER MOBILE */}
         <header className="md:hidden flex items-center justify-between bg-[#24292f] text-white p-4 shadow-sm z-10">
             <div className="flex items-center gap-2">
                 <FaGithub className="text-2xl" />
@@ -98,7 +101,7 @@ const LayoutAdmin = ({ children }) => {
             </button>
         </header>
 
-        {/* MAIN SCROLLABLE CONTENT */}
+        {/* MAIN CONTENT */}
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
             <div className="max-w-6xl mx-auto">
                 {children}
@@ -110,16 +113,12 @@ const LayoutAdmin = ({ children }) => {
   );
 };
 
-// --- NAV ITEM COMPONENT (SOLUSI RELOAD PAGE) ---
+// --- NAV ITEM COMPONENT ---
 const NavItem = ({ icon, text, to }) => {
     const location = useLocation();
-    
-    // Logic: Jika URL saat ini diawali dengan link tujuan, maka aktif.
-    // Kecuali untuk Dashboard (root path admin), harus exact match atau penanganan khusus.
     const isActive = location.pathname === to || (location.pathname.startsWith(to) && to !== "/dashboard");
 
     return (
-        // PENGGUNAAN <Link> (Bukan <a>) MENCEGAH RELOAD PAGE
         <Link to={to} className={`
             flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200
             ${isActive 

@@ -3,7 +3,10 @@ import LayoutAdmin from "../../components/admin/LayoutAdmin";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { getUserById, updateUser, resetState } from "../../features/userSlice";
-import { FaArrowLeft, FaSave, FaExclamationCircle } from "react-icons/fa";
+import { 
+    FaArrowLeft, FaSave, FaUser, FaEnvelope, 
+    FaLock, FaUserShield, FaInfoCircle, FaSpinner 
+} from "react-icons/fa";
 
 const EditUser = () => {
   const [name, setName] = useState("");
@@ -11,18 +14,20 @@ const EditUser = () => {
   const [password, setPassword] = useState("");
   const [confPassword, setConfPassword] = useState("");
   const [role, setRole] = useState("");
+  
+  // NEW: Local state for loading control
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isError, isLoading, message } = useSelector((state) => state.users);
+  // We only grab message and isError from Redux now
+  const { isError, message } = useSelector((state) => state.users);
 
-  // Ambil data user saat halaman dimuat
   useEffect(() => {
-    dispatch(resetState()); // Reset error lama
+    dispatch(resetState()); 
     const loadUser = async () => {
         try {
-            // Panggil action getById, lalu isi form dengan data yang didapat
             const result = await dispatch(getUserById(id)).unwrap();
             setName(result.name);
             setEmail(result.email);
@@ -36,130 +41,188 @@ const EditUser = () => {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true); // START LOADING
     
-    // Kirim data update (termasuk id/uuid)
-    const action = await dispatch(updateUser({ 
-        uuid: id, 
-        name, 
-        email, 
-        password, 
-        confPassword, 
-        role 
-    }));
-    
-    if (updateUser.fulfilled.match(action)) {
-        navigate("/users");
+    try {
+        // Dispatch the action
+        const action = await dispatch(updateUser({ 
+            uuid: id, 
+            name, 
+            email, 
+            password, 
+            confPassword, 
+            role 
+        }));
+        
+        // Check if the action was fulfilled (successful)
+        if (updateUser.fulfilled.match(action)) {
+            navigate("/users");
+        } else {
+            // If rejected (failed), stop loading so user can try again
+            setIsSubmitting(false);
+        }
+    } catch (error) {
+        console.error("Update failed:", error);
+        setIsSubmitting(false); // Stop loading on unexpected error
     }
   };
 
   return (
     <LayoutAdmin>
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-            <Link to="/users" className="text-gray-500 hover:text-blue-600 transition">
+      {/* --- HEADER --- */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4">
+            <Link 
+                to="/users" 
+                className="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-full text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition shadow-sm"
+            >
                 <FaArrowLeft />
             </Link>
-            <h2 className="text-xl font-semibold text-slate-900">Edit User</h2>
+            <div>
+                <h1 className="text-2xl font-bold text-slate-800">Edit Pengguna</h1>
+                <p className="text-sm text-slate-500">Perbarui informasi dan hak akses pengguna.</p>
+            </div>
         </div>
-        <p className="text-sm text-gray-500 ml-7">Update user information and permissions.</p>
       </div>
 
-      <div className="flex justify-center md:justify-start">
-        <div className="w-full max-w-2xl">
-            
-            {isError && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
-                    ⚠️ {message}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* KOLOM KIRI: INFO CARD */}
+        <div className="lg:col-span-1">
+             <div className="bg-indigo-600 rounded-2xl p-6 text-white shadow-lg shadow-indigo-200">
+                <h3 className="text-lg font-bold mb-2">Informasi Akun</h3>
+                <p className="text-indigo-100 text-sm leading-relaxed mb-6">
+                    Pastikan data yang Anda masukkan valid. Mengubah role akan mempengaruhi hak akses user tersebut di dalam sistem.
+                </p>
+                <div className="flex items-center gap-3 bg-white/10 p-3 rounded-xl backdrop-blur-sm">
+                    <div className="w-10 h-10 bg-white text-indigo-600 rounded-full flex items-center justify-center font-bold">
+                        {name && name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <p className="font-bold text-sm">{name || "Nama User"}</p>
+                        <p className="text-xs text-indigo-200">{role || "Role"}</p>
+                    </div>
                 </div>
-            )}
+             </div>
+        </div>
 
-            <div className="bg-white border border-gray-300 rounded-md shadow-sm">
-                <div className="bg-[#f6f8fa] px-4 py-3 border-b border-gray-300 rounded-t-md flex justify-between items-center">
-                    <h3 className="text-sm font-bold text-slate-700">Edit Profile</h3>
-                    <span className="text-xs text-gray-500 font-mono">ID: {id}</span>
-                </div>
+        {/* KOLOM KANAN: FORM UPDATE */}
+        <div className="lg:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 md:p-8">
                 
-                <form onSubmit={handleUpdate} className="p-6 space-y-4">
+                {isError && (
+                    <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded text-sm flex items-center gap-2 animate-pulse">
+                        <FaInfoCircle /> 
+                        <span>{message}</span>
+                    </div>
+                )}
+
+                <form onSubmit={handleUpdate} className="space-y-6">
                     
-                    {/* Name */}
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
-                        <input 
-                            type="text" 
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                        />
-                    </div>
-
-                    {/* Email */}
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
-                        <input 
-                            type="email" 
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                        />
-                    </div>
-
-                    {/* Password Info Alert */}
-                    <div className="bg-blue-50 border border-blue-200 rounded p-3 text-xs text-blue-800 flex items-start gap-2">
-                        <FaExclamationCircle className="mt-0.5" />
-                        <span>Leave the password fields <b>blank</b> if you don't want to change the password.</span>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Nama & Email */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">New Password</label>
-                            <input 
-                                type="password" 
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="••••••••"
-                            />
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label>
+                            <div className="relative">
+                                <FaUser className="absolute left-4 top-3.5 text-slate-400" />
+                                <input 
+                                    type="text" 
+                                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none text-slate-800 text-sm font-medium"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="Masukkan nama"
+                                />
+                            </div>
                         </div>
+
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Confirm New Password</label>
-                            <input 
-                                type="password" 
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                value={confPassword}
-                                onChange={(e) => setConfPassword(e.target.value)}
-                                placeholder="••••••••"
-                            />
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Email Address</label>
+                            <div className="relative">
+                                <FaEnvelope className="absolute left-4 top-3.5 text-slate-400" />
+                                <input 
+                                    type="email" 
+                                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none text-slate-800 text-sm font-medium"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="nama@email.com"
+                                />
+                            </div>
                         </div>
                     </div>
 
-                    {/* Role */}
+                    {/* Role Selection */}
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Role Permission</label>
-                        <select 
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
-                            value={role}
-                            onChange={(e) => setRole(e.target.value)}
-                        >
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
-                            <option value="surveyor">Survey</option>
-                        </select>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Role / Hak Akses</label>
+                        <div className="relative">
+                            <FaUserShield className="absolute left-4 top-3.5 text-slate-400" />
+                            <select 
+                                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none text-slate-800 text-sm font-medium appearance-none"
+                                value={role}
+                                onChange={(e) => setRole(e.target.value)}
+                            >
+                                <option value="user">User (Warga)</option>
+                                <option value="surveyor">Surveyor (Petugas Lapangan)</option>
+                                <option value="admin">Admin (Administrator)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Password Section */}
+                    <div className="border-t border-slate-100 pt-6 mt-2">
+                        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-4 flex gap-3 text-indigo-800 text-sm">
+                            <FaInfoCircle className="text-lg mt-0.5 flex-shrink-0" />
+                            <div>
+                                <span className="font-bold block">Ganti Password (Opsional)</span>
+                                Kosongkan kolom di bawah jika Anda tidak ingin mengubah password user ini.
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">Password Baru</label>
+                                <div className="relative">
+                                    <FaLock className="absolute left-4 top-3.5 text-slate-400" />
+                                    <input 
+                                        type="password" 
+                                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none text-slate-800 text-sm font-medium"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="******"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">Konfirmasi Password</label>
+                                <div className="relative">
+                                    <FaLock className="absolute left-4 top-3.5 text-slate-400" />
+                                    <input 
+                                        type="password" 
+                                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none text-slate-800 text-sm font-medium"
+                                        value={confPassword}
+                                        onChange={(e) => setConfPassword(e.target.value)}
+                                        placeholder="******"
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="pt-4 border-t border-gray-100 flex items-center gap-3">
+                    <div className="flex items-center gap-3 pt-4">
                         <button 
                             type="submit" 
-                            disabled={isLoading}
-                            className="bg-[#2da44e] hover:bg-[#2c974b] text-white px-4 py-2 rounded-md font-medium text-sm border border-[rgba(27,31,36,0.15)] shadow-sm flex items-center gap-2"
+                            disabled={isSubmitting} // Use local state here
+                            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-200 transition transform active:scale-95 flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
-                            {isLoading ? "Updating..." : <><FaSave /> Update User</>}
+                            {/* Use local state for spinner */}
+                            {isSubmitting ? <FaSpinner className="animate-spin" /> : <FaSave />}
+                            Simpan Perubahan
                         </button>
                         <Link 
                             to="/users"
-                            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium text-sm border border-gray-300 transition"
+                            className="px-6 py-3 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 rounded-xl font-bold text-sm transition"
                         >
-                            Cancel
+                            Batal
                         </Link>
                     </div>
 

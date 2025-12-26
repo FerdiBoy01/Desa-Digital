@@ -15,6 +15,8 @@ import ManageProgram from "./pages/admin/ManageProgram";
 import SurveyorDashboard from "./pages/surveyor/SurveyorDashboard";
 import InputSurvey from "./pages/surveyor/InputSurvey";
 import SuratPersetujuan from "./pages/user/SuratPersetujuan";
+import ReportPage from "./pages/admin/ReportPage";
+
 
 function App() {
   return (
@@ -37,6 +39,7 @@ function App() {
         <Route path="/surveys" element={<SurveyRepository />} />
         <Route path="/surveys/detail/:id" element={<SurveyDetail />} />
         <Route path="/programs" element={<ManageProgram />} />
+        <Route path="/admin/laporan" element={<ReportPage />} />
 
         {/* Route Form Bansos */}
         <Route path="/pengajuan/form" element={<FormPengajuan />} />

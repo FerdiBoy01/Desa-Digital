@@ -1,5 +1,5 @@
 import express from "express";
-import { getMyBiodata, updateBiodata, getAllBiodata, getBiodataById, getPublicApproved } from "../controllers/Biodata.js";
+import { getMyBiodata, updateBiodata, getAllBiodata, getBiodataById, getPublicApproved, getReportData } from "../controllers/Biodata.js";
 import { verifyBiodata } from "../controllers/Biodata.js";
 import { verifyToken, adminOnly, surveyorOnly, adminOrSurveyor } from "../middleware/AuthUser.js";
 import { submitSurvey } from "../controllers/Biodata.js";
@@ -16,5 +16,8 @@ router.get('/biodata/all', verifyToken, adminOrSurveyor, getAllBiodata);
 router.get('/biodata/:id', verifyToken, adminOrSurveyor, getBiodataById); // <--- Endpoint Baru
 router.patch('/biodata/verify/:id', verifyToken, adminOnly, verifyBiodata);
 router.patch('/biodata/survey/:id', verifyToken, surveyorOnly, submitSurvey);
+
+
+router.get('/reports/approved', verifyToken, adminOnly, getReportData); // <--- Route Baru
 
 export default router;

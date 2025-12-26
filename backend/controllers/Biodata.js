@@ -241,3 +241,33 @@ export const getPublicApproved = async(req, res) => {
         res.status(500).json({msg: error.message});
     }
 }
+
+// --- LAPORAN RESMI (DESA KE KABUPATEN) ---
+export const getReportData = async(req, res) => {
+    try {
+        const { tahun } = req.query; // Bisa filter by tahun (optional)
+        
+        const whereClause = {
+            status_pengajuan: 'Disetujui' // HANYA YANG DISETUJUI
+        };
+
+        if(tahun) {
+            whereClause.tahun_periode = tahun;
+        }
+
+        const response = await Biodata.findAll({
+            where: whereClause,
+            include: [{
+                model: Users,
+                attributes: ['name']
+            }],
+            order: [
+                ['jenis_bantuan_dipilih', 'ASC'], // Kelompokkan per jenis bantuan
+                ['desa_kelurahan', 'ASC'],        // Urutkan per desa
+            ]
+        });
+        res.status(200).json(response);
+    } catch (error) {
+        res.status(500).json({msg: error.message});
+    }
+}
