@@ -146,7 +146,16 @@ const Biodata = db.define('biodata', {
         type: DataTypes.INTEGER,
         allowNull: false,
         validate: { notEmpty: true }
-    }
+    },
+    // --- TAMBAHAN BARU ---
+    latitude: {
+        type: DataTypes.FLOAT, // Atau DataTypes.DECIMAL(10, 8)
+        allowNull: true
+    },
+    longitude: {
+        type: DataTypes.FLOAT,
+        allowNull: true
+    },
 }, {
     freezeTableName: true
 });

@@ -24,7 +24,7 @@ const app = express();
 // DATABASE SYNC
 
 // (async()=>{
-//     await Biodata.sync({ alter: true }); 
+//     db.sync({ alter: true }); 
 //     console.log("Database berhasil di-update!");
 // })();
 

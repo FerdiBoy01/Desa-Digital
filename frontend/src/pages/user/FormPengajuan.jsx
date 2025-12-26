@@ -19,26 +19,27 @@ const FormPengajuan = () => {
         agama: "Islam", pekerjaan: "", penghasilan_bulanan: "", jumlah_tanggungan: "",
         alamat_lengkap: "", provinsi: "", kabupaten: "", kecamatan: "", desa_kelurahan: "",
         kode_pos: "", no_handphone: "", penerima_pkh: false, penerima_bpnt: false,
-        jenis_bantuan_dipilih: "" // Akan diisi otomatis
+        jenis_bantuan_dipilih: "" 
     });
+
+    // --- STATE GEOLOCATION (PETA) ---
+    const [latitude, setLatitude] = useState("");
+    const [longitude, setLongitude] = useState("");
+    const [lokasiStatus, setLokasiStatus] = useState(""); // Untuk indikator status
 
     const [fileKTP, setFileKTP] = useState(null);
     const [fileKK, setFileKK] = useState(null);
     const [fileRumah, setFileRumah] = useState(null);
     const [previewKTP, setPreviewKTP] = useState("");
 
-    // 1. Load Data User saat halaman dibuka
     useEffect(() => { 
         dispatch(getMyBiodata()); 
     }, [dispatch]);
 
-    // 2. LOGIKA UTAMA: Mengisi Form (Dari Database ATAU dari Pilihan Dashboard)
     useEffect(() => {
-        // Cek apakah user mengklik "Ajukan" dari Dashboard?
         const selectedProgram = localStorage.getItem("selectedProgram");
 
         if (biodata) {
-            // JIKA SUDAH ADA DATA DI DATABASE (Mode Edit) -> Pakai data database
             setFormData({
                 nik: biodata.nik || "", no_kk: biodata.no_kk || "",
                 tempat_lahir: biodata.tempat_lahir || "", tanggal_lahir: biodata.tanggal_lahir || "",
@@ -49,18 +50,20 @@ const FormPengajuan = () => {
                 kecamatan: biodata.kecamatan || "", desa_kelurahan: biodata.desa_kelurahan || "",
                 kode_pos: biodata.kode_pos || "", no_handphone: biodata.no_handphone || "",
                 penerima_pkh: biodata.penerima_pkh || false, penerima_bpnt: biodata.penerima_bpnt || false,
-                // Prioritaskan data database, kalau kosong baru cek localStorage
                 jenis_bantuan_dipilih: biodata.jenis_bantuan_dipilih || selectedProgram || "BLT Dana Desa"
             });
             
-            // Set Preview Foto Lama
+            // ISI LAT/LONG JIKA SUDAH ADA DI DATABASE
+            if (biodata.latitude && biodata.longitude) {
+                setLatitude(biodata.latitude);
+                setLongitude(biodata.longitude);
+                setLokasiStatus("✅ Lokasi tersimpan.");
+            }
+
             if(biodata.foto_ktp) setPreviewKTP(`http://localhost:5000/uploads/${biodata.foto_ktp}`);
-            
-            // Bersihkan localStorage agar tidak mengganggu nanti
             localStorage.removeItem("selectedProgram");
 
         } else if (selectedProgram) {
-            // JIKA BELUM ADA DATA (User Baru) tapi membawa pilihan dari Dashboard
             setFormData(prev => ({
                 ...prev,
                 jenis_bantuan_dipilih: selectedProgram
@@ -69,7 +72,6 @@ const FormPengajuan = () => {
         }
     }, [biodata]);
 
-    // 3. Redirect setelah Sukses
     useEffect(() => {
         if(isSuccess){
             alert("Data pengajuan berhasil disimpan! Menunggu verifikasi admin.");
@@ -78,7 +80,29 @@ const FormPengajuan = () => {
         }
     }, [isSuccess, dispatch, navigate]);
 
-    // --- HANDLERS ---
+    // --- FUNGSI AMBIL LOKASI (GEOLOCATION) ---
+    const handleGetLocation = (e) => {
+        e.preventDefault();
+        setLokasiStatus("Sedang mengambil titik koordinat...");
+
+        if (!navigator.geolocation) {
+            setLokasiStatus("❌ Browser tidak mendukung GPS.");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setLatitude(position.coords.latitude);
+                setLongitude(position.coords.longitude);
+                setLokasiStatus("✅ Lokasi berhasil ditemukan!");
+            },
+            (error) => {
+                console.error(error);
+                setLokasiStatus("❌ Gagal. Pastikan GPS aktif dan Izinkan Akses Lokasi.");
+            }
+        );
+    };
+
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
     const handleCheckbox = (e) => setFormData({ ...formData, [e.target.name]: e.target.checked });
 
@@ -93,11 +117,15 @@ const FormPengajuan = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         const data = new FormData();
-        // Append text data
+        
         for (let key in formData) {
             data.append(key, formData[key]);
         }
-        // Append files
+        
+        // APPEND KOORDINAT
+        data.append("latitude", latitude);
+        data.append("longitude", longitude);
+
         if(fileKTP) data.append("foto_ktp", fileKTP);
         if(fileKK) data.append("foto_kk", fileKK);
         if(fileRumah) data.append("foto_rumah", fileRumah);
@@ -120,7 +148,7 @@ const FormPengajuan = () => {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
 
-                    {/* BAGIAN 0: PILIH JENIS BANTUAN */}
+                    {/* JENIS BANTUAN */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6">
                         <div className="bg-indigo-600 px-6 py-4 border-b border-indigo-700 flex items-center gap-3 text-white">
                             <FaHandHoldingHeart className="text-xl" />
@@ -128,29 +156,25 @@ const FormPengajuan = () => {
                         </div>
                         <div className="p-6">
                             <label className="label-input mb-3">Program Bantuan Terpilih:</label>
-                            
-                            {/* Input Readonly agar User sadar apa yang dipilih */}
                             <input 
                                 type="text" 
                                 className="w-full px-4 py-3 bg-indigo-50 border border-indigo-200 rounded-lg text-indigo-900 font-bold mb-4 focus:outline-none"
                                 value={formData.jenis_bantuan_dipilih}
                                 readOnly
                             />
-                            
                             <p className="text-sm text-slate-500">
                                 *Jenis bantuan otomatis terisi sesuai pilihan Anda di Dashboard. Jika ingin mengubah, silakan kembali ke Dashboard.
                             </p>
                         </div>
                     </div>
                     
-                    {/* BAGIAN 1: IDENTITAS DIRI */}
+                    {/* DATA KEPENDUDUKAN */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                         <div className="bg-indigo-50 px-6 py-4 border-b border-indigo-100 flex items-center gap-3">
                             <FaIdCard className="text-indigo-600 text-xl" />
                             <h2 className="font-bold text-slate-800">Data Kependudukan</h2>
                         </div>
                         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                            
                             <div className="md:col-span-2 bg-blue-50 border border-blue-100 p-4 rounded-lg flex gap-3 text-sm text-blue-800 mb-2">
                                 <FaInfoCircle className="mt-0.5 text-lg" />
                                 <div>
@@ -196,7 +220,7 @@ const FormPengajuan = () => {
                         </div>
                     </div>
 
-                    {/* BAGIAN 2: ALAMAT */}
+                    {/* ALAMAT & GEOLOCATION */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                         <div className="bg-orange-50 px-6 py-4 border-b border-orange-100 flex items-center gap-3">
                             <FaMapMarkerAlt className="text-orange-600 text-xl" />
@@ -207,6 +231,33 @@ const FormPengajuan = () => {
                                 <label className="label-input">Alamat Lengkap (Jalan, RT/RW)</label>
                                 <textarea name="alamat_lengkap" value={formData.alamat_lengkap} onChange={handleChange} className="input-field h-24" placeholder="Contoh: Jl. Merdeka No. 45, RT 01 RW 02" required></textarea>
                             </div>
+                            
+                            {/* --- FITUR GEOLOCATION (WOW FACTOR) --- */}
+                            <div className="md:col-span-2 bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                                <label className="label-input flex items-center gap-2 text-yellow-800 mb-2">
+                                    <FaMapMarkerAlt /> Titik Koordinat Rumah <span className="font-normal text-xs bg-yellow-200 px-2 py-0.5 rounded text-yellow-800">Wajib (Saat di Rumah)</span>
+                                </label>
+                                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                                    <button 
+                                        onClick={handleGetLocation}
+                                        type="button" // PENTING: Biar gak submit form
+                                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-sm transition"
+                                    >
+                                        <FaMapMarkerAlt /> Ambil Lokasi Saya Sekarang
+                                    </button>
+                                    {lokasiStatus && (
+                                        <span className={`text-sm font-medium animate-pulse ${lokasiStatus.includes('✅') ? 'text-green-600' : 'text-orange-600'}`}>
+                                            {lokasiStatus}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="mt-2 text-xs text-slate-500 font-mono flex gap-4">
+                                    <span>Latitude: {latitude || "-"}</span>
+                                    <span>Longitude: {longitude || "-"}</span>
+                                </div>
+                            </div>
+                            {/* --------------------------------------- */}
+
                             <div>
                                 <label className="label-input">Provinsi</label>
                                 <input type="text" name="provinsi" value={formData.provinsi} onChange={handleChange} className="input-field" required />
@@ -234,7 +285,7 @@ const FormPengajuan = () => {
                         </div>
                     </div>
 
-                    {/* BAGIAN 3: EKONOMI */}
+                    {/* EKONOMI */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                         <div className="bg-green-50 px-6 py-4 border-b border-green-100 flex items-center gap-3">
                             <FaMoneyBillWave className="text-green-600 text-xl" />
@@ -256,7 +307,7 @@ const FormPengajuan = () => {
                         </div>
                     </div>
 
-                    {/* BAGIAN 4: UPLOAD DOKUMEN */}
+                    {/* UPLOAD DOKUMEN */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                         <div className="bg-purple-50 px-6 py-4 border-b border-purple-100 flex items-center gap-3">
                             <FaCamera className="text-purple-600 text-xl" />
@@ -285,7 +336,7 @@ const FormPengajuan = () => {
                         </div>
                     </div>
 
-                    {/* BAGIAN 5: BANTUAN LAIN */}
+                    {/* STATUS BANTUAN LAIN */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                         <h2 className="font-bold text-slate-800 mb-4 border-b pb-2">Status Bantuan Lain</h2>
                         <div className="flex flex-col gap-3">

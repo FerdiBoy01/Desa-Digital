@@ -5,7 +5,7 @@ import { LogOut, reset } from "../../features/authSlice";
 import { 
     FaChartLine, FaUsers, FaClipboardList, FaCogs, 
     FaSignOutAlt, FaBars, FaTimes, FaGithub, FaUserCircle, FaBox,
-    FaFilePdf
+    FaFilePdf, FaMapMarkedAlt // <--- 1. Icon Peta Import Disini
 } from "react-icons/fa";
 
 const LayoutAdmin = ({ children }) => {
@@ -65,14 +65,23 @@ const LayoutAdmin = ({ children }) => {
         {/* Menu Navigasi */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             <NavItem to="/dashboard" icon={<FaChartLine />} text="Dashboard" />
-            <NavItem to="/users" icon={<FaUsers />} text="Users" />
+            
+            {/* --- MENU KHUSUS ADMIN --- */}
+            {user && user.role === "admin" && (
+                <>
+                    <NavItem to="/users" icon={<FaUsers />} text="Users Management" />
+                    {/* 2. Menu Peta Sebaran (GIS) */}
+                    <NavItem to="/maps" icon={<FaMapMarkedAlt />} text="Peta Sebaran" />
+                </>
+            )}
+            
             <NavItem to="/surveys" icon={<FaClipboardList />} text="Repositories (Survey)" />
             <NavItem to="/programs" icon={<FaBox />} text="Kelola Program" />
-            
-            {/* --- MENU BARU DITAMBAHKAN DISINI --- */}
             <NavItem to="/admin/laporan" icon={<FaFilePdf />} text="Laporan Resmi" />
 
-            <NavItem to="/settings" icon={<FaCogs />} text="Settings" />
+            <div className="pt-4 mt-4 border-t border-gray-700">
+                 <NavItem to="/settings" icon={<FaCogs />} text="Settings" />
+            </div>
         </nav>
 
         {/* Footer Logout */}
@@ -115,6 +124,7 @@ const LayoutAdmin = ({ children }) => {
 // --- NAV ITEM COMPONENT ---
 const NavItem = ({ icon, text, to }) => {
     const location = useLocation();
+    // Logic active: jika path sama persis ATAU path diawali 'to' (kecuali dashboard biar gak nyala terus)
     const isActive = location.pathname === to || (location.pathname.startsWith(to) && to !== "/dashboard");
 
     return (

@@ -2,7 +2,8 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./components/Login";
 import Register from "./components/Register";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./pages//Dashboard";
+import Dashboarda from "./pages/admin/Dashboard";
 import Layout from "./pages/Layout";
 import Welcome from "./components/Welcome";
 import Users from "./pages/admin/Users";
@@ -17,6 +18,7 @@ import InputSurvey from "./pages/surveyor/InputSurvey";
 import SuratPersetujuan from "./pages/user/SuratPersetujuan";
 import ReportPage from "./pages/admin/ReportPage";
 import Transparansi from "./pages/public/Transparansi";
+import SebaranMaps from "./pages/admin/SebaranMaps";
 
 
 function App() {
@@ -30,6 +32,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboarda" element={<Dashboarda />} />
 
        {/* Route User Management */}
         <Route path="/users" element={<Users />} />
@@ -47,6 +50,10 @@ function App() {
 
         <Route path="/surveyor/dashboard" element={<SurveyorDashboard />} />
         <Route path="/surveyor/input/:id" element={<InputSurvey />} />
+
+        <Route path="/maps" element={<SebaranMaps />} />
+
+
       </Routes>
     </BrowserRouter>
   );

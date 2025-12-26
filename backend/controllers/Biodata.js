@@ -136,7 +136,7 @@ export const updateBiodata = async (req, res) => {
             pekerjaan, penghasilan_bulanan, jumlah_tanggungan,
             alamat_lengkap, provinsi, kabupaten, kecamatan, desa_kelurahan,
             kode_pos, no_handphone, penerima_pkh, penerima_bpnt,
-            jenis_bantuan_dipilih
+            jenis_bantuan_dipilih,latitude, longitude
         } = req.body;
 
         const dataInput = {
@@ -150,6 +150,8 @@ export const updateBiodata = async (req, res) => {
             foto_kk: kkName,
             foto_rumah: rumahName,
             jenis_bantuan_dipilih,
+            latitude: latitude ? latitude : null,
+            longitude: longitude ? longitude : null,
             userId: user.id
         };
 

@@ -4,7 +4,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { LogOut, reset } from "../features/authSlice";
 import { 
     FaHome, FaUsers, FaClipboardList, FaSignOutAlt, 
-    FaHandHoldingHeart, FaBoxOpen, FaFilePdf
+    FaHandHoldingHeart, FaBoxOpen, FaFilePdf,
+    FaMapMarkedAlt // <--- 1. TAMBAHKAN IMPORT ICON INI
 } from "react-icons/fa";
 
 const Sidebar = () => {
@@ -20,9 +21,19 @@ const Sidebar = () => {
 
   const menuItems = [
       { name: "Dashboard", path: "/dashboard", icon: <FaHome /> },
-      { name: "Data Pengguna", path: "/users", icon: <FaUsers /> },
+      
+      // Hanya Admin yang bisa atur user
+      ...(user && user.role === "admin" ? [
+          { name: "Data Pengguna", path: "/users", icon: <FaUsers /> }
+      ] : []),
+
       { name: "Data Pengajuan", path: "/surveys", icon: <FaClipboardList /> },
-      { name: "Program Bantuan", path: "/programs", icon: <FaBoxOpen /> }, // Asumsi ada page ini
+      
+      // --- 2. MENU BARU: PETA SEBARAN (GIS) ---
+      { name: "Peta Sebaran", path: "/maps", icon: <FaMapMarkedAlt /> },
+      // ----------------------------------------
+
+      { name: "Program Bantuan", path: "/programs", icon: <FaBoxOpen /> },
       { name: "Laporan Resmi", path: "/admin/laporan", icon: <FaFilePdf /> },
   ];
 
@@ -44,7 +55,7 @@ const Sidebar = () => {
       <div className="px-6 py-6">
           <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/50 border border-slate-700">
               <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-sm">
-                  {user && user.name.charAt(0).toUpperCase()}
+                  {user && user.name ? user.name.charAt(0).toUpperCase() : "U"}
               </div>
               <div className="overflow-hidden">
                   <p className="text-sm font-bold truncate">{user && user.name}</p>
