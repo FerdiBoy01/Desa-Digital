@@ -17,19 +17,16 @@ export const LoginUser = createAsyncThunk("user/LoginUser", async(user, thunkAPI
             password: user.password
         });
         
-        // --- PERBAIKAN: Simpan Token ke LocalStorage ---
         if(response.data.accessToken){
             localStorage.setItem('token', response.data.accessToken);
         }
-        // Setelah menyimpan token, ambil data user dari endpoint /me
         try {
             const token = response.data.accessToken;
             const meResp = await axios.get('http://localhost:5000/me', {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            return meResp.data; // kembalikan object user
+            return meResp.data;
         } catch (err) {
-            // Jika gagal mengambil /me, kembalikan minimal token object
             return response.data;
         }
     } catch (error) {
@@ -65,7 +62,6 @@ export const getMe = createAsyncThunk("user/getMe", async(_, thunkAPI) => {
         // --- PERBAIKAN: Ambil Token & Masukkan ke Header ---
         const token = localStorage.getItem('token');
         
-        // Jika token tidak ada, reject agar tidak lanjut request
         if(!token) {
             return thunkAPI.rejectWithValue("No token found");
         }
@@ -88,7 +84,6 @@ export const getMe = createAsyncThunk("user/getMe", async(_, thunkAPI) => {
 
 // 4. Logout (Hapus Token)
 export const LogOut = createAsyncThunk("user/LogOut", async() => {
-    // Hapus token dari penyimpanan lokal
     localStorage.removeItem('token');
     
     await axios.delete('http://localhost:5000/logout');
@@ -98,15 +93,11 @@ export const authSlice = createSlice({
     name: "auth",
     initialState,
     reducers: {
-        // Jangan reset seluruh state (termasuk `user`) karena beberapa komponen
-        // memanggil `reset()` saat mount untuk membersihkan pesan/error.
-        // Jika `user` dihilangkan maka menu admin akan hilang sementara.
         reset: (state) => {
             state.isError = false;
             state.isSuccess = false;
             state.isLoading = false;
             state.message = "";
-            // Biarkan `state.user` utuh
         }
     },
     extraReducers: (builder) => {
@@ -164,7 +155,7 @@ export const authSlice = createSlice({
             state.isSuccess = false;
             state.isError = false;
             state.message = "";
-            state.user = null; // pastikan user dihapus saat logout selesai
+            state.user = null;
         });
         builder.addCase(LogOut.rejected, (state, action) => {
             state.isLoading = false;

@@ -43,7 +43,6 @@ export const adminOrSurveyor = async (req, res, next) => {
         console.log("Role di Database:", user.role); 
         console.log("Apakah Admin?", user.role === "admin");
         console.log("Apakah Surveyor?", user.role === "surveyor");
-        // -----------------------------------------------
 
         if(user.role !== "admin" && user.role !== "surveyor") {
             return res.status(403).json({msg: "Akses terlarang: Role Anda adalah " + user.role});
@@ -63,7 +62,6 @@ export const adminOrSurveyor = async (req, res, next) => {
 //         });
 //         if(!user) return res.status(404).json({msg: "User tidak ditemukan"});
         
-//         // Cek: Apakah dia Admin ATAU Surveyor?
 //         if(user.role !== "admin" && user.role !== "surveyor") {
 //             return res.status(403).json({msg: "Akses terlarang: Khusus Admin atau Surveyor"});
 //         }
